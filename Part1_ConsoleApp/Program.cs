@@ -13,7 +13,6 @@ namespace Part1_ConsoleApp
 {
     class Program
     {
-        public Timer t1;
 
         static int Main(string[] args)
         {
@@ -30,9 +29,9 @@ namespace Part1_ConsoleApp
             Log("");
 
             var app = new CommandLineApplication();
-            var argList = app.Option("-l | --list <value>", "List of numbers seperated by commas (e.g.  '--list 1,2,3,4,5')", CommandOptionType.SingleValue);
-            var argGetEndpoint = app.Option("-g | --get <value>", "API endpoint to call a GET request to (e.g.  '--get http://worldtimeapi.org/api/timezone/Europe/London.json')", CommandOptionType.SingleValue);
-            var argDelayMilliseconds = app.Option("-d | --delay <value>", "Delay interval in milliseconds between printing out numbers (e.g.  '--delay 200')", CommandOptionType.SingleValue);
+            var argList = app.Option("-l | --list <value>", "List of numbers seperated by commas (e.g. '--list 1,2,3,4,5')", CommandOptionType.SingleValue);
+            var argGetEndpoint = app.Option("-g | --get <value>", "API endpoint to call a GET request to (e.g. '--get http://worldtimeapi.org/api/timezone/Europe/London.json')", CommandOptionType.SingleValue);
+            var argDelayMilliseconds = app.Option("-d | --delay <value>", "Delay interval in milliseconds between printing out numbers (e.g. '--delay 200')", CommandOptionType.SingleValue);
             app.HelpOption("-? | -h | --help");
 
             app.OnExecute(() =>
@@ -50,7 +49,7 @@ namespace Part1_ConsoleApp
                 }
                 else
                 {
-                    Log("Error parsing list into integers, please check your input: '" + d.StringListOfNumbers + "'");
+                    LogError("Error parsing list into integers, please check your input: '" + d.StringListOfNumbers + "'");
 
                     return -1;
                 }
@@ -75,7 +74,7 @@ namespace Part1_ConsoleApp
                 }
                 else
                 {
-                    Log("Error parsing delay milliseconds into integer, please check your input: '" + argDelayMilliseconds.Value() + "'");
+                    LogError("Error parsing delay milliseconds into integer, please check your input: '" + argDelayMilliseconds.Value() + "'");
 
                     return -1;
                 }
@@ -123,6 +122,10 @@ namespace Part1_ConsoleApp
         static public void Log(string s)
         {
             Console.WriteLine(s);
+        }
+        static public void LogError(string s)
+        {
+            Console.WriteLine("ERROR: "+s);
         }
 
         static public string GetWebText(string url)
