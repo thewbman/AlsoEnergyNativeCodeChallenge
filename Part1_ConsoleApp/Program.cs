@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,6 +34,7 @@ namespace Part1_ConsoleApp
             var argList = app.Option("-l | --list <value>", "List of numbers seperated by commas (e.g. '--list 1,2,3,4,5')", CommandOptionType.SingleValue);
             var argGetEndpoint = app.Option("-g | --get <value>", "API endpoint to call a GET request to (e.g. '--get http://worldtimeapi.org/api/timezone/Europe/London.json')", CommandOptionType.SingleValue);
             var argDelayMilliseconds = app.Option("-d | --delay <value>", "Delay interval in milliseconds between printing out numbers (e.g. '--delay 200')", CommandOptionType.SingleValue);
+            var argRunSqlTest = app.Option("-r | --runSqlTest", "Run the use cases that simulate API calls of 200, 500 and timeout", CommandOptionType.NoValue);
             app.HelpOption("-? | -h | --help");
 
             app.OnExecute(() =>
@@ -108,6 +111,55 @@ namespace Part1_ConsoleApp
                 Log(d.SummarizeTaskTracker());
 
 
+                if(argRunSqlTest.HasValue())
+                {
+                    //Simulate 200, 500 and timeout web calls
+                    if (ConfigurationManager.ConnectionStrings["ae_code_challange"] == null)
+                    {
+                        LogError("Unable to find connection string for 'ae_code_challange' in app.config");
+                    }
+                    else
+                    {
+                        using (SqlConnection sqlcon_connection = new SqlConnection(ConfigurationManager.ConnectionStrings["ae_code_challange"].ConnectionString))
+                        {
+                            if (sqlcon_connection.State != System.Data.ConnectionState.Open)
+                                sqlcon_connection.Open();
+
+                            //Allow the input enpoint to be used, though it will not give the same 200/500/timeout responses
+                            string baseEndpoint = argGetEndpoint.HasValue() ? argGetEndpoint.Value() : "http://localhost:49932/api/Hello";
+
+                            string[] testEndpoints = new string[3];
+                            testEndpoints[0] = baseEndpoint;                               //200
+                            testEndpoints[1] = baseEndpoint + "?forceError=true";          //500
+                            testEndpoints[2] = baseEndpoint + "?forceTimeout=true";        //timeout
+
+                            foreach (string url in testEndpoints)
+                            {
+                                //Call http request and return log object
+                                var logevent = GetWebTextReturningLog(url);
+
+                                Log("Logging web request '" + url + "' to database with status: " + logevent.error_code.ToString());
+
+                                string sql = "";
+                                sql = @"spInsert_server_response_log";
+
+                                SqlCommand command = new SqlCommand(sql, sqlcon_connection);
+                                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                                command.Parameters.Add("@start_time", SqlDbType.DateTime2).Value = logevent.start_time;
+                                command.Parameters.Add("@end_time", SqlDbType.DateTime2).Value = logevent.end_time;
+                                command.Parameters.Add("@status_code", SqlDbType.SmallInt).Value = logevent.status_code;
+                                command.Parameters.Add("@response_text", SqlDbType.VarChar).Value = logevent.response_text;
+                                command.Parameters.Add("@error_code", SqlDbType.SmallInt).Value = logevent.error_code;
+
+                                command.ExecuteNonQuery();
+                            }
+
+                        }
+                    }
+                }
+
+                Log("");
                 Log("Program is complete.  Press any key to quit");
                 Console.Read();
 
@@ -133,8 +185,6 @@ namespace Part1_ConsoleApp
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                //request.ContentType = "application/json";
-                //request.Accept = "application/json";
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 Stream resStream = response.GetResponseStream();
                 StreamReader reader = new StreamReader(resStream);
@@ -148,6 +198,50 @@ namespace Part1_ConsoleApp
             {
                 return "Web exception: " + webEx.Message;
             }
+        }
+
+        static public ServerResponseLogClass GetWebTextReturningLog(string url)
+        {
+            var log = new ServerResponseLogClass();
+            log.start_time = DateTime.Now;
+
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = 5000; //5 seconds
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream resStream = response.GetResponseStream();
+                StreamReader reader = new StreamReader(resStream);
+                log.response_text = reader.ReadToEnd();
+                log.status_code = (Int16)response.StatusCode;
+                log.end_time = DateTime.Now;
+                log.error_code = ErrorCodeEnum.Success;
+            }
+            catch (UriFormatException uriEx)
+            {
+                log.response_text = "URI exception: " + uriEx.Message;
+                log.error_code = ErrorCodeEnum.Error;
+            }
+            catch (WebException webEx)
+            {
+
+                if (webEx.Status == WebExceptionStatus.Timeout)
+                {
+                    log.response_text = "Web exception timeout: " + webEx.Message;
+                    log.error_code = ErrorCodeEnum.Timeout;
+                }
+                else
+                {
+                    log.response_text = "Web exception: " + webEx.Message;
+
+                    if (webEx.Response != null)
+                        log.status_code = (Int16)((HttpWebResponse)webEx.Response).StatusCode;
+
+                    log.error_code = ErrorCodeEnum.Error;
+                }
+            }
+
+            return log;
         }
 
         static public int PrintListWithDelay(int[] myIntArray, int myDelayMilliseconds, string textPreface, bool reverseList)
@@ -167,6 +261,8 @@ namespace Part1_ConsoleApp
             return ErrorCount;
 
         }
+
+
 
     }
 }
