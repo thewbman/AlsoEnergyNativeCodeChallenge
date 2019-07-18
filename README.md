@@ -1,6 +1,6 @@
 # Wes Brown challenge results
 - I have checked in all code for the challenge.  I have updated the document below with `my comments` in code quotes
-- There is a single Visual Studio solution that includes all code for all parts of this challenge.
+- There is a single Visual Studio solution that includes all code for all parts of this challenge.  If I was actually developing these functional elements they would probably be in seperate solutions and/or seperate source code locations.
 
 # Instructions
 - You will need Visual Studio to complete challenges outlined below. We suggest you utilize one of the community editions provided at https://www.visualstudio.com/downloads/
@@ -13,12 +13,13 @@
 `The console app is runable as ~\Part1_ConsoleApp\bin\Debug\Part1_ConsoleApp.exe .  Running it with --help shows available optional parameters to run for the integer list, GET api endpoint, delay in printing list values, and is the different GET enpoint response tests should be run.`
 `For the most direct validation, open the full solution in Visual Studio and run the Part 2 project in debug mode.  Then open a new command line and run the console application from the \bin\Debug\ folder.
 `If not specified with the --get parameter, the console app has a web api default for the first web request and uses the "Part 2" web application test server for the --runSqlTest parameter`
+`A good command for validation is "Part1_ConsoleApp.exe -r --list 1,2,3,4 --delay 150" `
 - Assume this application will have a high load and focus should be on achieving the best performance.
 - Create a console application in Visual Studio
 - Create a function to sum up all the even numbers in a supplied List<int> parameter and return the result.
 - Create a function that will make an http GET request to a given URL and dump out the result in Console. (Be ready to discuss what external tools you can use to validate the behavior, that your program is indeed making the request for ex: fiddler, wireshark...)  
 - Create a function which will print out the numbers in a List<int> to the console in a loop with a configurable delay (print the number out every 500ms, or every 1000ms ). Make sure the function can be called from a thread. 
-- Add a collection to track which thread is the first to report each number and print the results of the collection after the threads have both completed.
+- Add a collection to track which thread is the first to report each number and print the results of the collection after the threads have both completed. 
 - In your program create 2 threads, configure your initial thread to print a number out every 500ms, configure your 2nd thread to print out numbers in reverse every 1000ms. 
 - Your application should block untill all the numbers and results are printed out to the console.
   

@@ -15,7 +15,7 @@ namespace Part1_ConsoleApp
 {
     class Program
     {
-
+        
         static int Main(string[] args)
         {
             DateTime start = DateTime.UtcNow;
@@ -82,7 +82,7 @@ namespace Part1_ConsoleApp
                     return -1;
                 }
 
-                Task t_user = Task.Factory.StartNew(() =>PrintListWithDelay(d.NumberList.ToArray(), _delay, "User chosen delay " + _delay.ToString() + "ms: ", false));
+                Task t_user = Task.Factory.StartNew(() =>PrintListWithDelay(d.IntList().ToArray(), _delay, "user", "User chosen delay " + _delay.ToString() + "ms: ", false, false, ref d));
                 Task.WaitAll(t_user);
                 Log("");
 
@@ -93,22 +93,25 @@ namespace Part1_ConsoleApp
                 Task t1 = Task.Factory.StartNew(() => 
                 {
                     d.StartNewTask(1,"t1");
-                    PrintListWithDelay(d.NumberList.ToArray(), 500, "t1 - Delayed 500ms: ", false);
+                    PrintListWithDelay(d.IntList().ToArray(),  500, "t1", "t1 (forward) - Delayed  500ms: ", false, true, ref d);
                     d.CompleteTask(1);
                 });
                 taskList.Add(t1);
                 Task t2 = Task.Factory.StartNew(() =>
                 {
                     d.StartNewTask(2,"t2");
-                    PrintListWithDelay(d.NumberList.ToArray(), 1000, "t2 - Delayed 1000ms in reverse: ", true);
+                    PrintListWithDelay(d.IntList().ToArray(), 1000, "t2", "t2 (reverse) - Delayed 1000ms: ", true, true, ref d);
                     d.CompleteTask(2);
                 });
                 taskList.Add(t2);
 
-
+                //Makes sure all tasks are complete
                 Task.WaitAll(taskList.ToArray());
 
-                Log(d.SummarizeTaskTracker());
+                //This command compares which t1/t2 task finishes first
+                //Log(d.SummarizeTaskTracker());
+
+                Log(d.SummarizeNumberListOrder());
 
 
                 if(argRunSqlTest.HasValue())
@@ -208,7 +211,7 @@ namespace Part1_ConsoleApp
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Timeout = 5000; //5 seconds
+                request.Timeout = 3000; //3 seconds
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 Stream resStream = response.GetResponseStream();
                 StreamReader reader = new StreamReader(resStream);
@@ -244,17 +247,35 @@ namespace Part1_ConsoleApp
             return log;
         }
 
-        static public int PrintListWithDelay(int[] myIntArray, int myDelayMilliseconds, string textPreface, bool reverseList)
+        static public int PrintListWithDelay(int[] myIntArray, int myDelayMilliseconds, string processName, string textPreface, bool reverseList, bool trackFirstProcess, ref DataModel d)
         {
+            //Using ref passing of DataModel d to centralize tracking of timing
             int ErrorCount = 0;
 
+            //Note: i needs to be a zero-index counter
             if (reverseList)
-                myIntArray = myIntArray.Reverse<int>().ToArray();
-
-            foreach(var i in myIntArray)
             {
-                Log(textPreface + i.ToString());
-                Thread.Sleep(myDelayMilliseconds);
+                for (int i = myIntArray.Length - 1; i >= 0; i--)
+                {
+                    Log(textPreface + myIntArray[i].ToString());
+
+                    if (trackFirstProcess)
+                        d.SetFirstProcessName(i, processName);
+
+                    Thread.Sleep(myDelayMilliseconds);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < myIntArray.Length; i++)
+                {
+                    Log(textPreface + myIntArray[i].ToString());
+
+                    if (trackFirstProcess)
+                        d.SetFirstProcessName(i, processName);
+
+                    Thread.Sleep(myDelayMilliseconds);
+                }
             }
 
 
