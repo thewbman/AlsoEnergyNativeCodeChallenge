@@ -1,4 +1,5 @@
-![](http://www.alsoenergy.com/wp/wp-content/uploads/FullColor_BlackTag-e1413573042293.png)
+# Wes Brown challenge results
+- I have checked in all code for the challenge.  I have updated the document below with `my comments` in code quotes
 
 # Instructions
 - You will need Visual Studio to complete challenges outlined below. We suggest you utilize one of the community editions provided at https://www.visualstudio.com/downloads/
