@@ -11,7 +11,7 @@
 
 ## Part 1. Console Application
 `The console app is runable as ~\Part1_ConsoleApp\bin\Debug\Part1_ConsoleApp.exe .  Running it with --help shows available optional parameters to run for the integer list, GET api endpoint, delay in printing list values, and is the different GET enpoint response tests should be run.`
-`For the most direct validation, open the full solution in Visual Studio and run the Part 2 project in debug mode.  Then open a new command line and run the console application from the \bin\Debug\ folder.
+`For the most direct validation, open the full solution in Visual Studio and run the Part 2 project in debug mode.  Then open a new command line and run the console application from the \bin\Debug\ folder.`
 `If not specified with the --get parameter, the console app has a web api default for the first web request and uses the "Part 2" web application test server for the --runSqlTest parameter`
 `A good command for validation is "Part1_ConsoleApp.exe -r --list 1,2,3,4 --delay 150" `
 - Assume this application will have a high load and focus should be on achieving the best performance.
@@ -75,4 +75,3 @@ t2: 1
  - Add a view to show the count of each error code per hour and the error code.
  - Add a unit test for each simulated case, the stored procedure and the view.
 `There is an addition test project named Part3_SQL.Tests for this`
- `
